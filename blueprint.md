@@ -12,6 +12,7 @@ This document outlines the features and implementation details of the AI Library
     *   Generates 6 unique random numbers between 1 and 45.
     *   Allows copying the generated numbers to the clipboard.
     *   Keeps a history of the generated numbers.
+    *   Provides a reset function to clear current numbers and history.
 *   **Implementation:**
     *   A custom Web Component `lotto-generator` will encapsulate the logic and UI.
     *   A button will trigger the number generation.
@@ -32,6 +33,7 @@ This document outlines the features and implementation details of the AI Library
     *   Generates 6 unique random numbers between 1 and 45.
     *   Allows copying the generated numbers to the clipboard.
     *   Keeps a history of the generated numbers.
+    *   Provides a reset function to clear current numbers and history.
 *   **Implementation:**
     *   A custom Web Component `lotto-generator` will encapsulate the logic and UI.
     *   A button will trigger the number generation.
@@ -52,3 +54,6 @@ This document outlines the features and implementation details of the AI Library
 4.  **[Completed]** Implement 'History of Generated Numbers' feature.
     *   **[Completed]** Add a section to display the history of generated numbers.
     *   **[Completed]** Implement logic to store and display past generated numbers.
+5.  **[Completed]** Implement 'Reset Functionality' feature.
+    *   **[Completed]** Add a 'Reset' button to the `lotto-generator` component.
+    *   **[Completed]** Implement the logic to clear current numbers and history.

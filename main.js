@@ -95,6 +95,7 @@ class LottoGenerator extends HTMLElement {
         <div class="buttons-container">
           <button id="generate">Generate Numbers</button>
           <button id="copy" disabled>Copy Numbers</button>
+          <button id="reset">Reset</button>
         </div>
         <div class="numbers-container"></div>
         <div class="history-section">
@@ -112,6 +113,7 @@ class LottoGenerator extends HTMLElement {
     this.shadowRoot.getElementById('generate').addEventListener('click', () => this.generateNumbers());
     this.shadowRoot.getElementById('copy').addEventListener('click', () => this.copyNumbers());
     this.shadowRoot.getElementById('clear-history').addEventListener('click', () => this.clearHistory());
+    this.shadowRoot.getElementById('reset').addEventListener('click', () => this.resetAll());
     this.renderHistory();
   }
 
@@ -158,6 +160,13 @@ class LottoGenerator extends HTMLElement {
   clearHistory() {
     this.history = [];
     this.renderHistory();
+  }
+
+  resetAll() {
+    this.numbers = [];
+    this.shadowRoot.querySelector('.numbers-container').innerHTML = '';
+    this.shadowRoot.getElementById('copy').disabled = true;
+    this.clearHistory();
   }
 
   copyNumbers() {
