@@ -4,6 +4,8 @@ class LottoGenerator extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.numbers = [];
     this.history = [];
+    this.minNumber = 1;
+    this.maxNumber = 45;
     this.shadowRoot.innerHTML = `
       <style>
         .lotto-container {
@@ -16,6 +18,22 @@ class LottoGenerator extends HTMLElement {
           background-color: #f0f0f0;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
           max-width: 600px; /* Limit width to make history more readable */
+        }
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .input-group label {
+            font-weight: bold;
+        }
+        .input-group input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 60px;
+            text-align: center;
+            font-size: 1em;
         }
         .buttons-container {
           display: flex;
@@ -98,6 +116,12 @@ class LottoGenerator extends HTMLElement {
         }
       </style>
       <div class="lotto-container">
+        <div class="input-group">
+            <label for="min-number">Min:</label>
+            <input type="number" id="min-number" value="1" min="1" max="99">
+            <label for="max-number">Max:</label>
+            <input type="number" id="max-number" value="45" min="1" max="99">
+        </div>
         <div class="buttons-container">
           <button id="generate">Generate Numbers</button>
           <button id="copy" disabled>Copy Numbers</button>
@@ -126,14 +150,38 @@ class LottoGenerator extends HTMLElement {
     this.shadowRoot.getElementById('clear-history').addEventListener('click', () => this.clearHistory());
     this.shadowRoot.getElementById('save-state').addEventListener('click', () => this.saveState());
     this.shadowRoot.getElementById('load-state').addEventListener('click', () => this.loadState());
+
+    this.minNumberInput = this.shadowRoot.getElementById('min-number');
+    this.maxNumberInput = this.shadowRoot.getElementById('max-number');
+
+    this.minNumberInput.addEventListener('change', () => this.updateRange());
+    this.maxNumberInput.addEventListener('change', () => this.updateRange());
+
     this.loadState(); // Attempt to load state on initialization
     this.renderHistory();
+  }
+
+  updateRange() {
+    const newMin = parseInt(this.minNumberInput.value);
+    const newMax = parseInt(this.maxNumberInput.value);
+
+    if (newMin >= newMax || newMin < 1 || newMax > 99) {
+      alert('Invalid range: Min must be less than Max, and numbers must be between 1 and 99.');
+      // Revert to last valid state or default
+      this.minNumberInput.value = this.minNumber;
+      this.maxNumberInput.value = this.maxNumber;
+      return;
+    }
+    this.minNumber = newMin;
+    this.maxNumber = newMax;
+    this.saveState(); // Save updated range
   }
 
   generateNumbers() {
     const numbers = new Set();
     while (numbers.size < 6) {
-      numbers.add(Math.floor(Math.random() * 45) + 1);
+      const randomNumber = Math.floor(Math.random() * (this.maxNumber - this.minNumber + 1)) + this.minNumber;
+      numbers.add(randomNumber);
     }
     this.numbers = Array.from(numbers).sort((a, b) => a - b);
     this.renderNumbers(this.numbers);
@@ -182,6 +230,10 @@ class LottoGenerator extends HTMLElement {
     this.shadowRoot.querySelector('.numbers-container').innerHTML = '';
     this.shadowRoot.getElementById('copy').disabled = true;
     this.clearHistory();
+    this.minNumber = 1;
+    this.maxNumber = 45;
+    this.minNumberInput.value = this.minNumber;
+    this.maxNumberInput.value = this.maxNumber;
     localStorage.removeItem('lottoGeneratorState'); // Clear local storage on reset
     alert('All data reset!');
   }
@@ -189,10 +241,12 @@ class LottoGenerator extends HTMLElement {
   saveState() {
     const state = {
       numbers: this.numbers,
-      history: this.history
+      history: this.history,
+      minNumber: this.minNumber,
+      maxNumber: this.maxNumber
     };
     localStorage.setItem('lottoGeneratorState', JSON.stringify(state));
-    alert('State saved to local storage!');
+    // alert('State saved to local storage!');
   }
 
   loadState() {
@@ -201,12 +255,18 @@ class LottoGenerator extends HTMLElement {
       const state = JSON.parse(savedState);
       this.numbers = state.numbers || [];
       this.history = state.history || [];
+      this.minNumber = state.minNumber || 1;
+      this.maxNumber = state.maxNumber || 45;
+
+      this.minNumberInput.value = this.minNumber;
+      this.maxNumberInput.value = this.maxNumber;
+
       this.renderNumbers(this.numbers);
       this.renderHistory();
       this.shadowRoot.getElementById('copy').disabled = this.numbers.length === 0;
-      alert('State loaded from local storage!');
+      // alert('State loaded from local storage!');
     } else {
-      alert('No saved state found.');
+      // alert('No saved state found.');
     }
   }
 

@@ -9,7 +9,7 @@ This document outlines the features and implementation details of the AI Library
 ### Lotto Number Generator
 
 *   **Functionality:** 
-    *   Generates 6 unique random numbers between 1 and 45.
+    *   Generates 6 unique random numbers within a configurable range (e.g., 1-45, 1-50).
     *   Allows copying the generated numbers to the clipboard.
     *   Keeps a history of the generated numbers.
     *   Provides a reset function to clear current numbers and history.
@@ -31,7 +31,7 @@ This document outlines the features and implementation details of the AI Library
 ### Lotto Number Generator
 
 *   **Functionality:** 
-    *   Generates 6 unique random numbers between 1 and 45.
+    *   Generates 6 unique random numbers within a configurable range (e.g., 1-45, 1-50).
     *   Allows copying the generated numbers to the clipboard.
     *   Keeps a history of the generated numbers.
     *   Provides a reset function to clear current numbers and history.
@@ -63,3 +63,7 @@ This document outlines the features and implementation details of the AI Library
     *   **[Completed]** Add a 'Save' button to the `lotto-generator` component.
     *   **[Completed]** Implement logic to save the current generated numbers and history to local storage.
     *   **[Completed]** Implement logic to load saved numbers and history from local storage on component initialization.
+7.  **[Completed]** Implement 'Configurable Number Range' feature.
+    *   **[Completed]** Add input fields for minimum and maximum numbers to the `lotto-generator` component.
+    *   **[Completed]** Update the number generation logic to use the configured range.
+    *   **[Completed]** Persist the selected range in local storage.
