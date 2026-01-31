@@ -17,6 +17,7 @@ This document outlines the features and implementation details of the AI Library
     *   Allows users to mark and save favorite number sets.
     *   Enables sharing of generated numbers via URL or social media.
     *   Generates multiple sets of lotto numbers at once.
+    *   Suggests numbers based on predefined "Smart Pick" criteria (e.g., common numbers, overdue numbers).
 *   **Implementation:**
     *   A custom Web Component `lotto-generator` will encapsulate the logic and UI.
     *   A button will trigger the number generation.
@@ -42,6 +43,7 @@ This document outlines the features and implementation details of the AI Library
     *   Allows users to mark and save favorite number sets.
     *   Enables sharing of generated numbers via URL or social media.
     *   Generates multiple sets of lotto numbers at once.
+    *   Suggests numbers based on predefined "Smart Pick" criteria (e.g., most/least frequent, overdue numbers).
 *   **Implementation:**
     *   A custom Web Component `lotto-generator` will encapsulate the logic and UI.
     *   A button will trigger the number generation.
@@ -93,3 +95,6 @@ This document outlines the features and implementation details of the AI Library
     *   **[Completed]** Add an input field for the number of sets to generate.
     *   **[Completed]** Update the generation logic to create and display multiple sets of numbers.
     *   **[Completed]** Persist the number of sets in local storage.
+13. **[Completed]** Implement 'Smart Pick' feature.
+    *   **[Completed]** Add a 'Smart Pick' button.
+    *   **[Completed]** Implement logic to generate numbers based on simple "smart" criteria (e.g., most/least frequent, overdue).
