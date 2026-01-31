@@ -3,6 +3,7 @@ class LottoGenerator extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this.numbers = [];
+    this.history = [];
     this.shadowRoot.innerHTML = `
       <style>
         .lotto-container {
@@ -14,6 +15,7 @@ class LottoGenerator extends HTMLElement {
           border-radius: 10px;
           background-color: #f0f0f0;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+          max-width: 600px; /* Limit width to make history more readable */
         }
         .buttons-container {
           display: flex;
@@ -39,6 +41,7 @@ class LottoGenerator extends HTMLElement {
         .numbers-container {
           display: flex;
           gap: 10px;
+          margin-bottom: 20px;
         }
         .number-ball {
           display: flex;
@@ -51,6 +54,42 @@ class LottoGenerator extends HTMLElement {
           font-weight: bold;
           color: white;
         }
+        .history-section {
+          width: 100%;
+          margin-top: 20px;
+          border-top: 1px solid #ddd;
+          padding-top: 20px;
+          text-align: center;
+        }
+        .history-section h3 {
+          color: #555;
+          margin-bottom: 15px;
+        }
+        #history-container {
+          max-height: 200px;
+          overflow-y: auto;
+          border: 1px solid #eee;
+          background-color: #fff;
+          padding: 10px;
+          border-radius: 5px;
+          text-align: left;
+        }
+        .history-item {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 5px;
+          margin-bottom: 8px;
+          padding-bottom: 5px;
+          border-bottom: 1px dotted #eee;
+        }
+        .history-item:last-child {
+          border-bottom: none;
+        }
+        .history-item .number-ball {
+            width: 30px;
+            height: 30px;
+            font-size: 0.9em;
+        }
       </style>
       <div class="lotto-container">
         <div class="buttons-container">
@@ -58,6 +97,13 @@ class LottoGenerator extends HTMLElement {
           <button id="copy" disabled>Copy Numbers</button>
         </div>
         <div class="numbers-container"></div>
+        <div class="history-section">
+          <h3>Generated Numbers History</h3>
+          <button id="clear-history">Clear History</button>
+          <div id="history-container">
+            <p>No numbers generated yet.</p>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -65,6 +111,8 @@ class LottoGenerator extends HTMLElement {
   connectedCallback() {
     this.shadowRoot.getElementById('generate').addEventListener('click', () => this.generateNumbers());
     this.shadowRoot.getElementById('copy').addEventListener('click', () => this.copyNumbers());
+    this.shadowRoot.getElementById('clear-history').addEventListener('click', () => this.clearHistory());
+    this.renderHistory();
   }
 
   generateNumbers() {
@@ -75,6 +123,41 @@ class LottoGenerator extends HTMLElement {
     this.numbers = Array.from(numbers).sort((a, b) => a - b);
     this.renderNumbers(this.numbers);
     this.shadowRoot.getElementById('copy').disabled = false;
+    this.addNumbersToHistory(this.numbers);
+  }
+
+  addNumbersToHistory(numbers) {
+    this.history.unshift(numbers); // Add to the beginning
+    if (this.history.length > 5) { // Keep only last 5 history items
+      this.history.pop();
+    }
+    this.renderHistory();
+  }
+
+  renderHistory() {
+    const historyContainer = this.shadowRoot.getElementById('history-container');
+    historyContainer.innerHTML = '';
+    if (this.history.length === 0) {
+      historyContainer.innerHTML = '<p>No numbers generated yet.</p>';
+      return;
+    }
+    this.history.forEach(historicNumbers => {
+      const historyItem = document.createElement('div');
+      historyItem.className = 'history-item';
+      historicNumbers.forEach(number => {
+        const ball = document.createElement('div');
+        ball.className = 'number-ball';
+        ball.textContent = number;
+        ball.style.backgroundColor = this.getColor(number);
+        historyItem.appendChild(ball);
+      });
+      historyContainer.appendChild(historyItem);
+    });
+  }
+
+  clearHistory() {
+    this.history = [];
+    this.renderHistory();
   }
 
   copyNumbers() {

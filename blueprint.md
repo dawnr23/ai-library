@@ -11,6 +11,7 @@ This document outlines the features and implementation details of the AI Library
 *   **Functionality:** 
     *   Generates 6 unique random numbers between 1 and 45.
     *   Allows copying the generated numbers to the clipboard.
+    *   Keeps a history of the generated numbers.
 *   **Implementation:**
     *   A custom Web Component `lotto-generator` will encapsulate the logic and UI.
     *   A button will trigger the number generation.
@@ -30,6 +31,7 @@ This document outlines the features and implementation details of the AI Library
 *   **Functionality:** 
     *   Generates 6 unique random numbers between 1 and 45.
     *   Allows copying the generated numbers to the clipboard.
+    *   Keeps a history of the generated numbers.
 *   **Implementation:**
     *   A custom Web Component `lotto-generator` will encapsulate the logic and UI.
     *   A button will trigger the number generation.
@@ -47,3 +49,6 @@ This document outlines the features and implementation details of the AI Library
 3.  **[Completed]** Implement 'Copy to Clipboard' feature.
     *   **[Completed]** Add a 'Copy' button to the `lotto-generator` component.
     *   **[Completed]** Implement the clipboard functionality in `main.js`.
+4.  **[Completed]** Implement 'History of Generated Numbers' feature.
+    *   **[Completed]** Add a section to display the history of generated numbers.
+    *   **[Completed]** Implement logic to store and display past generated numbers.
