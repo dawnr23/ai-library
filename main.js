@@ -2,6 +2,7 @@ class LottoGenerator extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    this.numbers = [];
     this.shadowRoot.innerHTML = `
       <style>
         .lotto-container {
@@ -13,6 +14,10 @@ class LottoGenerator extends HTMLElement {
           border-radius: 10px;
           background-color: #f0f0f0;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .buttons-container {
+          display: flex;
+          gap: 10px;
         }
         button {
           padding: 10px 20px;
@@ -26,6 +31,10 @@ class LottoGenerator extends HTMLElement {
         }
         button:hover {
           background-color: #45a049;
+        }
+        button:disabled {
+          background-color: #ccc;
+          cursor: not-allowed;
         }
         .numbers-container {
           display: flex;
@@ -44,14 +53,18 @@ class LottoGenerator extends HTMLElement {
         }
       </style>
       <div class="lotto-container">
-        <button>Generate Numbers</button>
+        <div class="buttons-container">
+          <button id="generate">Generate Numbers</button>
+          <button id="copy" disabled>Copy Numbers</button>
+        </div>
         <div class="numbers-container"></div>
       </div>
     `;
   }
 
   connectedCallback() {
-    this.shadowRoot.querySelector('button').addEventListener('click', () => this.generateNumbers());
+    this.shadowRoot.getElementById('generate').addEventListener('click', () => this.generateNumbers());
+    this.shadowRoot.getElementById('copy').addEventListener('click', () => this.copyNumbers());
   }
 
   generateNumbers() {
@@ -59,7 +72,17 @@ class LottoGenerator extends HTMLElement {
     while (numbers.size < 6) {
       numbers.add(Math.floor(Math.random() * 45) + 1);
     }
-    this.renderNumbers(Array.from(numbers).sort((a, b) => a - b));
+    this.numbers = Array.from(numbers).sort((a, b) => a - b);
+    this.renderNumbers(this.numbers);
+    this.shadowRoot.getElementById('copy').disabled = false;
+  }
+
+  copyNumbers() {
+    navigator.clipboard.writeText(this.numbers.join(', ')).then(() => {
+      alert('Copied to clipboard!');
+    }, () => {
+      alert('Failed to copy.');
+    });
   }
 
   renderNumbers(numbers) {
