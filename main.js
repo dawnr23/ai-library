@@ -159,6 +159,7 @@ class LottoGenerator extends HTMLElement {
           <button id="save-state">Save State</button>
           <button id="load-state">Load State</button>
           <button id="save-favorite" disabled>Save to Favorites</button>
+          <button id="share" disabled>Share</button>
         </div>
         <div class="history-section">
           <h3>Generated Numbers History</h3>
@@ -185,6 +186,8 @@ class LottoGenerator extends HTMLElement {
     this.shadowRoot.getElementById('save-state').addEventListener('click', () => this.saveState());
     this.shadowRoot.getElementById('load-state').addEventListener('click', () => this.loadState());
     this.shadowRoot.getElementById('save-favorite').addEventListener('click', () => this.saveFavorite());
+    this.shadowRoot.getElementById('share').addEventListener('click', () => this.shareNumbers());
+
 
     this.minNumberInput = this.shadowRoot.getElementById('min-number');
     this.maxNumberInput = this.shadowRoot.getElementById('max-number');
@@ -236,6 +239,7 @@ class LottoGenerator extends HTMLElement {
     this.renderNumbers(this.numbers);
     this.shadowRoot.getElementById('copy').disabled = false;
     this.shadowRoot.getElementById('save-favorite').disabled = false;
+    this.shadowRoot.getElementById('share').disabled = false;
     this.addNumbersToHistory(this.numbers);
     this.saveState(); // Save state after generating numbers
   }
@@ -299,6 +303,7 @@ class LottoGenerator extends HTMLElement {
     this.renderNumbers(this.numbers);
     this.shadowRoot.getElementById('copy').disabled = false;
     this.shadowRoot.getElementById('save-favorite').disabled = false;
+    this.shadowRoot.getElementById('share').disabled = false;
     alert('Favorite numbers loaded!');
   }
 
@@ -352,6 +357,7 @@ class LottoGenerator extends HTMLElement {
     this.shadowRoot.querySelector('.numbers-container').innerHTML = '';
     this.shadowRoot.getElementById('copy').disabled = true;
     this.shadowRoot.getElementById('save-favorite').disabled = true;
+    this.shadowRoot.getElementById('share').disabled = true;
     this.minNumber = 1;
     this.maxNumber = 45;
     this.numBalls = 6;
@@ -362,6 +368,31 @@ class LottoGenerator extends HTMLElement {
     this.renderHistory();
     this.renderFavorites();
     alert('All data reset!');
+  }
+
+  shareNumbers() {
+    if (this.numbers.length === 0) {
+      alert('Generate numbers first before sharing!');
+      return;
+    }
+
+    const shareUrl = `${window.location.origin}${window.location.pathname}?numbers=${this.numbers.join(',')}&min=${this.minNumber}&max=${this.maxNumber}&count=${this.numBalls}`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'Lotto Numbers',
+        text: `Check out my lotto numbers: ${this.numbers.join(', ')}`,
+        url: shareUrl,
+      })
+        .then(() => console.log('Successful share'))
+        .catch((error) => console.log('Error sharing', error));
+    } else {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert(`Shareable URL copied to clipboard: ${shareUrl}`);
+      }, () => {
+        alert('Failed to copy shareable URL.');
+      });
+    }
   }
 
   saveState() {
@@ -397,6 +428,7 @@ class LottoGenerator extends HTMLElement {
       this.renderFavorites();
       this.shadowRoot.getElementById('copy').disabled = this.numbers.length === 0;
       this.shadowRoot.getElementById('save-favorite').disabled = this.numbers.length === 0;
+      this.shadowRoot.getElementById('share').disabled = this.numbers.length === 0;
       // alert('State loaded from local storage!');
     } else {
       // alert('No saved state found.');
