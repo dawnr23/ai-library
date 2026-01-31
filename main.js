@@ -20,6 +20,12 @@ class LottoGenerator extends HTMLElement {
         .buttons-container {
           display: flex;
           gap: 10px;
+          margin-bottom: 10px;
+        }
+        .action-buttons {
+          display: flex;
+          gap: 10px;
+          margin-top: 10px;
         }
         button {
           padding: 10px 20px;
@@ -98,6 +104,10 @@ class LottoGenerator extends HTMLElement {
           <button id="reset">Reset</button>
         </div>
         <div class="numbers-container"></div>
+        <div class="action-buttons">
+          <button id="save-state">Save State</button>
+          <button id="load-state">Load State</button>
+        </div>
         <div class="history-section">
           <h3>Generated Numbers History</h3>
           <button id="clear-history">Clear History</button>
@@ -112,8 +122,11 @@ class LottoGenerator extends HTMLElement {
   connectedCallback() {
     this.shadowRoot.getElementById('generate').addEventListener('click', () => this.generateNumbers());
     this.shadowRoot.getElementById('copy').addEventListener('click', () => this.copyNumbers());
-    this.shadowRoot.getElementById('clear-history').addEventListener('click', () => this.clearHistory());
     this.shadowRoot.getElementById('reset').addEventListener('click', () => this.resetAll());
+    this.shadowRoot.getElementById('clear-history').addEventListener('click', () => this.clearHistory());
+    this.shadowRoot.getElementById('save-state').addEventListener('click', () => this.saveState());
+    this.shadowRoot.getElementById('load-state').addEventListener('click', () => this.loadState());
+    this.loadState(); // Attempt to load state on initialization
     this.renderHistory();
   }
 
@@ -126,6 +139,7 @@ class LottoGenerator extends HTMLElement {
     this.renderNumbers(this.numbers);
     this.shadowRoot.getElementById('copy').disabled = false;
     this.addNumbersToHistory(this.numbers);
+    this.saveState(); // Save state after generating numbers
   }
 
   addNumbersToHistory(numbers) {
@@ -160,6 +174,7 @@ class LottoGenerator extends HTMLElement {
   clearHistory() {
     this.history = [];
     this.renderHistory();
+    this.saveState(); // Save state after clearing history
   }
 
   resetAll() {
@@ -167,6 +182,32 @@ class LottoGenerator extends HTMLElement {
     this.shadowRoot.querySelector('.numbers-container').innerHTML = '';
     this.shadowRoot.getElementById('copy').disabled = true;
     this.clearHistory();
+    localStorage.removeItem('lottoGeneratorState'); // Clear local storage on reset
+    alert('All data reset!');
+  }
+
+  saveState() {
+    const state = {
+      numbers: this.numbers,
+      history: this.history
+    };
+    localStorage.setItem('lottoGeneratorState', JSON.stringify(state));
+    alert('State saved to local storage!');
+  }
+
+  loadState() {
+    const savedState = localStorage.getItem('lottoGeneratorState');
+    if (savedState) {
+      const state = JSON.parse(savedState);
+      this.numbers = state.numbers || [];
+      this.history = state.history || [];
+      this.renderNumbers(this.numbers);
+      this.renderHistory();
+      this.shadowRoot.getElementById('copy').disabled = this.numbers.length === 0;
+      alert('State loaded from local storage!');
+    } else {
+      alert('No saved state found.');
+    }
   }
 
   copyNumbers() {
