@@ -24,32 +24,6 @@ This document outlines the features and implementation details of the AI Library
     *   The generated numbers will be displayed in a visually appealing way.
 *   **Styling:** Modern and clean design with responsive layout.
 
-# AI Library Project Blueprint
-
-## Overview
-
-This document outlines the features and implementation details of the AI Library web application. The initial feature is a simple Lotto Number Generator.
-
-## Current Features
-
-### Lotto Number Generator
-
-*   **Functionality:** 
-    *   Generates a configurable number of unique random numbers within a configurable range (e.g., 1-45, 1-50).
-    *   Allows copying the generated numbers to the clipboard.
-    *   Keeps a history of the generated numbers.
-    *   Provides a reset function to clear current numbers and history.
-    *   Saves and loads generated numbers from local storage.
-    *   Allows users to mark and save favorite number sets.
-    *   Enables sharing of generated numbers via URL or social media.
-    *   Generates multiple sets of lotto numbers at once.
-    *   Suggests numbers based on predefined "Smart Pick" criteria (e.g., most/least frequent, overdue numbers).
-*   **Implementation:**
-    *   A custom Web Component `lotto-generator` will encapsulate the logic and UI.
-    *   A button will trigger the number generation.
-    *   The generated numbers will be displayed in a visually appealing way.
-*   **Styling:** Modern and clean design with responsive layout.
-
 ## Development Plan
 
 1.  **[Completed]** Initial project setup.
