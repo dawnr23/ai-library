@@ -2,12 +2,13 @@ class LottoGenerator extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.numbers = [];
+    this.numbers = []; // Will now hold an array of arrays for multiple sets
     this.history = [];
     this.favorites = [];
     this.minNumber = 1;
     this.maxNumber = 45;
     this.numBalls = 6;
+    this.numSets = 1; // New property for number of sets
     this.shadowRoot.innerHTML = `
       <style>
         .lotto-container {
@@ -26,6 +27,8 @@ class LottoGenerator extends HTMLElement {
             gap: 10px;
             align-items: center;
             margin-bottom: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .input-group label {
             font-weight: bold;
@@ -67,8 +70,20 @@ class LottoGenerator extends HTMLElement {
         }
         .numbers-container {
           display: flex;
-          gap: 10px;
+          flex-direction: column; /* Changed for multiple sets */
+          gap: 15px; /* Gap between sets */
           margin-bottom: 20px;
+          width: 100%;
+        }
+        .number-set-display {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px; /* Gap between balls in a set */
+          justify-content: center;
+          padding: 10px;
+          border: 1px dashed #ccc;
+          border-radius: 8px;
+          background-color: #f9f9f9;
         }
         .number-ball {
           display: flex;
@@ -148,6 +163,8 @@ class LottoGenerator extends HTMLElement {
             <input type="number" id="max-number" value="45" min="1" max="99">
             <label for="num-balls">Balls:</label>
             <input type="number" id="num-balls" value="6" min="1" max="10">
+            <label for="num-sets">Sets:</label>
+            <input type="number" id="num-sets" value="1" min="1" max="5">
         </div>
         <div class="buttons-container">
           <button id="generate">Generate Numbers</button>
@@ -192,10 +209,13 @@ class LottoGenerator extends HTMLElement {
     this.minNumberInput = this.shadowRoot.getElementById('min-number');
     this.maxNumberInput = this.shadowRoot.getElementById('max-number');
     this.numBallsInput = this.shadowRoot.getElementById('num-balls');
+    this.numSetsInput = this.shadowRoot.getElementById('num-sets');
 
     this.minNumberInput.addEventListener('change', () => this.updateRange());
     this.maxNumberInput.addEventListener('change', () => this.updateRange());
     this.numBallsInput.addEventListener('change', () => this.updateNumBalls());
+    this.numSetsInput.addEventListener('change', () => this.updateNumSets());
+
 
     this.loadState(); // Attempt to load state on initialization
     this.renderHistory();
@@ -229,26 +249,43 @@ class LottoGenerator extends HTMLElement {
     this.saveState(); // Save updated number of balls
   }
 
-  generateNumbers() {
-    const numbers = new Set();
-    while (numbers.size < this.numBalls) {
-      const randomNumber = Math.floor(Math.random() * (this.maxNumber - this.minNumber + 1)) + this.minNumber;
-      numbers.add(randomNumber);
+  updateNumSets() {
+    const newNumSets = parseInt(this.numSetsInput.value);
+    if (newNumSets < 1 || newNumSets > 10) { // Limit number of sets for display purposes
+        alert('Invalid number of sets: Must be between 1 and 10.');
+        this.numSetsInput.value = this.numSets;
+        return;
     }
-    this.numbers = Array.from(numbers).sort((a, b) => a - b);
+    this.numSets = newNumSets;
+    this.saveState(); // Save updated number of sets
+  }
+
+  generateNumbers() {
+    const generatedSets = [];
+    for (let i = 0; i < this.numSets; i++) {
+        const numbers = new Set();
+        while (numbers.size < this.numBalls) {
+            const randomNumber = Math.floor(Math.random() * (this.maxNumber - this.minNumber + 1)) + this.minNumber;
+            numbers.add(randomNumber);
+        }
+        generatedSets.push(Array.from(numbers).sort((a, b) => a - b));
+    }
+    this.numbers = generatedSets;
     this.renderNumbers(this.numbers);
     this.shadowRoot.getElementById('copy').disabled = false;
     this.shadowRoot.getElementById('save-favorite').disabled = false;
     this.shadowRoot.getElementById('share').disabled = false;
-    this.addNumbersToHistory(this.numbers);
+    this.addNumbersToHistory(this.numbers); // Add all generated sets to history
     this.saveState(); // Save state after generating numbers
   }
 
-  addNumbersToHistory(numbers) {
-    this.history.unshift(numbers); // Add to the beginning
-    if (this.history.length > 5) { // Keep only last 5 history items
-      this.history.pop();
-    }
+  addNumbersToHistory(generatedSets) {
+    generatedSets.forEach(set => {
+        this.history.unshift(set); // Add each set to the beginning
+        if (this.history.length > 5) { // Keep only last 5 history items
+            this.history.pop();
+        }
+    });
     this.renderHistory();
   }
 
@@ -284,22 +321,23 @@ class LottoGenerator extends HTMLElement {
       alert('Generate numbers first before saving to favorites!');
       return;
     }
-    const currentNumbersString = this.numbers.join(',');
-    const isDuplicate = this.favorites.some(fav => fav.join(',') === currentNumbersString);
+    // Save all current generated sets as one favorite entry
+    const currentSetsString = JSON.stringify(this.numbers);
+    const isDuplicate = this.favorites.some(fav => JSON.stringify(fav) === currentSetsString);
 
     if (isDuplicate) {
       alert('This set of numbers is already in your favorites!');
       return;
     }
 
-    this.favorites.push([...this.numbers]); // Save a copy
+    this.favorites.push([...this.numbers]); // Save a copy of all sets
     this.saveState();
     this.renderFavorites();
     alert('Numbers saved to favorites!');
   }
 
-  loadFavorite(favoriteNumbers) {
-    this.numbers = [...favoriteNumbers];
+  loadFavorite(favoriteSets) {
+    this.numbers = [...favoriteSets];
     this.renderNumbers(this.numbers);
     this.shadowRoot.getElementById('copy').disabled = false;
     this.shadowRoot.getElementById('save-favorite').disabled = false;
@@ -321,20 +359,29 @@ class LottoGenerator extends HTMLElement {
       favoritesContainer.innerHTML = '<p>No favorites saved yet.</p>';
       return;
     }
-    this.favorites.forEach((favNumbers, index) => {
+    this.favorites.forEach((favSets, index) => {
       const favoriteItem = document.createElement('div');
       favoriteItem.className = 'favorite-item';
-      const numberSet = document.createElement('div');
-      numberSet.className = 'favorite-item-set';
-      numberSet.addEventListener('click', () => this.loadFavorite(favNumbers));
+      const numberSetWrapper = document.createElement('div');
+      numberSetWrapper.className = 'favorite-item-set';
+      numberSetWrapper.addEventListener('click', () => this.loadFavorite(favSets));
 
-      favNumbers.forEach(number => {
-        const ball = document.createElement('div');
-        ball.className = 'number-ball';
-        ball.textContent = number;
-        ball.style.backgroundColor = this.getColor(number);
-        numberSet.appendChild(ball);
+      favSets.forEach((favNumbers, setIndex) => {
+          favNumbers.forEach(number => {
+            const ball = document.createElement('div');
+            ball.className = 'number-ball';
+            ball.textContent = number;
+            ball.style.backgroundColor = this.getColor(number);
+            numberSetWrapper.appendChild(ball);
+          });
+          if (setIndex < favSets.length - 1) {
+              const separator = document.createElement('span');
+              separator.textContent = ' | ';
+              separator.style.margin = '0 5px';
+              numberSetWrapper.appendChild(separator);
+          }
       });
+      
 
       const deleteButton = document.createElement('button');
       deleteButton.className = 'delete-favorite';
@@ -344,7 +391,7 @@ class LottoGenerator extends HTMLElement {
         this.deleteFavorite(index);
       });
 
-      favoriteItem.appendChild(numberSet);
+      favoriteItem.appendChild(numberSetWrapper);
       favoriteItem.appendChild(deleteButton);
       favoritesContainer.appendChild(favoriteItem);
     });
@@ -361,9 +408,11 @@ class LottoGenerator extends HTMLElement {
     this.minNumber = 1;
     this.maxNumber = 45;
     this.numBalls = 6;
+    this.numSets = 1;
     this.minNumberInput.value = this.minNumber;
     this.maxNumberInput.value = this.maxNumber;
     this.numBallsInput.value = this.numBalls;
+    this.numSetsInput.value = this.numSets;
     localStorage.removeItem('lottoGeneratorState'); // Clear all data from local storage
     this.renderHistory();
     this.renderFavorites();
@@ -376,12 +425,15 @@ class LottoGenerator extends HTMLElement {
       return;
     }
 
-    const shareUrl = `${window.location.origin}${window.location.pathname}?numbers=${this.numbers.join(',')}&min=${this.minNumber}&max=${this.maxNumber}&count=${this.numBalls}`;
+    // Join all sets into a single string for sharing
+    const allNumbersFlat = this.numbers.map(set => set.join('-')).join('_');
+    const shareUrl = `${window.location.origin}${window.location.pathname}?numbers=${allNumbersFlat}&min=${this.minNumber}&max=${this.maxNumber}&count=${this.numBalls}&sets=${this.numSets}`;
+
 
     if (navigator.share) {
       navigator.share({
         title: 'Lotto Numbers',
-        text: `Check out my lotto numbers: ${this.numbers.join(', ')}`,
+        text: `Check out my lotto numbers: ${this.numbers.map(set => set.join(', ')).join(' | ')}`,
         url: shareUrl,
       })
         .then(() => console.log('Successful share'))
@@ -402,7 +454,8 @@ class LottoGenerator extends HTMLElement {
       favorites: this.favorites,
       minNumber: this.minNumber,
       maxNumber: this.maxNumber,
-      numBalls: this.numBalls
+      numBalls: this.numBalls,
+      numSets: this.numSets
     };
     localStorage.setItem('lottoGeneratorState', JSON.stringify(state));
     // alert('State saved to local storage!');
@@ -418,10 +471,12 @@ class LottoGenerator extends HTMLElement {
       this.minNumber = state.minNumber || 1;
       this.maxNumber = state.maxNumber || 45;
       this.numBalls = state.numBalls || 6;
+      this.numSets = state.numSets || 1;
 
       this.minNumberInput.value = this.minNumber;
       this.maxNumberInput.value = this.maxNumber;
       this.numBallsInput.value = this.numBalls;
+      this.numSetsInput.value = this.numSets;
 
       this.renderNumbers(this.numbers);
       this.renderHistory();
@@ -436,22 +491,36 @@ class LottoGenerator extends HTMLElement {
   }
 
   copyNumbers() {
-    navigator.clipboard.writeText(this.numbers.join(', ')).then(() => {
+    if (this.numbers.length === 0) return;
+    const textToCopy = this.numbers.map((set, index) => `Set ${index + 1}: ${set.join(', ')}`).join('\n');
+    navigator.clipboard.writeText(textToCopy).then(() => {
       alert('Copied to clipboard!');
     }, () => {
       alert('Failed to copy.');
     });
   }
 
-  renderNumbers(numbers) {
+  renderNumbers(setsOfNumbers) {
     const container = this.shadowRoot.querySelector('.numbers-container');
     container.innerHTML = '';
-    numbers.forEach(number => {
-      const ball = document.createElement('div');
-      ball.className = 'number-ball';
-      ball.textContent = number;
-      ball.style.backgroundColor = this.getColor(number);
-      container.appendChild(ball);
+    setsOfNumbers.forEach((numbers, index) => {
+        const setDisplay = document.createElement('div');
+        setDisplay.className = 'number-set-display';
+        const setTitle = document.createElement('h4');
+        setTitle.textContent = `Set ${index + 1}`;
+        setTitle.style.marginBottom = '10px';
+        setTitle.style.width = '100%';
+        setTitle.style.textAlign = 'center';
+        setDisplay.appendChild(setTitle);
+
+        numbers.forEach(number => {
+            const ball = document.createElement('div');
+            ball.className = 'number-ball';
+            ball.textContent = number;
+            ball.style.backgroundColor = this.getColor(number);
+            setDisplay.appendChild(ball);
+        });
+        container.appendChild(setDisplay);
     });
   }
 

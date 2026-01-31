@@ -16,6 +16,7 @@ This document outlines the features and implementation details of the AI Library
     *   Saves and loads generated numbers from local storage.
     *   Allows users to mark and save favorite number sets.
     *   Enables sharing of generated numbers via URL or social media.
+    *   Generates multiple sets of lotto numbers at once.
 *   **Implementation:**
     *   A custom Web Component `lotto-generator` will encapsulate the logic and UI.
     *   A button will trigger the number generation.
@@ -40,6 +41,7 @@ This document outlines the features and implementation details of the AI Library
     *   Saves and loads generated numbers from local storage.
     *   Allows users to mark and save favorite number sets.
     *   Enables sharing of generated numbers via URL or social media.
+    *   Generates multiple sets of lotto numbers at once.
 *   **Implementation:**
     *   A custom Web Component `lotto-generator` will encapsulate the logic and UI.
     *   A button will trigger the number generation.
@@ -87,3 +89,7 @@ This document outlines the features and implementation details of the AI Library
     *   **[Completed]** Add a 'Share' button.
     *   **[Completed]** Implement logic to generate a shareable URL with current numbers, range, and number of balls.
     *   **[Completed]** Optionally, integrate with Web Share API for direct sharing.
+12. **[Completed]** Implement 'Generate Multiple Sets' feature.
+    *   **[Completed]** Add an input field for the number of sets to generate.
+    *   **[Completed]** Update the generation logic to create and display multiple sets of numbers.
+    *   **[Completed]** Persist the number of sets in local storage.
