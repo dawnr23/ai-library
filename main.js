@@ -4,6 +4,7 @@ class LottoGenerator extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.numbers = [];
     this.history = [];
+    this.favorites = [];
     this.minNumber = 1;
     this.maxNumber = 45;
     this.numBalls = 6;
@@ -80,18 +81,18 @@ class LottoGenerator extends HTMLElement {
           font-weight: bold;
           color: white;
         }
-        .history-section {
+        .history-section, .favorites-section {
           width: 100%;
           margin-top: 20px;
           border-top: 1px solid #ddd;
           padding-top: 20px;
           text-align: center;
         }
-        .history-section h3 {
+        .history-section h3, .favorites-section h3 {
           color: #555;
           margin-bottom: 15px;
         }
-        #history-container {
+        #history-container, #favorites-container {
           max-height: 200px;
           overflow-y: auto;
           border: 1px solid #eee;
@@ -100,21 +101,43 @@ class LottoGenerator extends HTMLElement {
           border-radius: 5px;
           text-align: left;
         }
-        .history-item {
+        .history-item, .favorite-item {
           display: flex;
           flex-wrap: wrap;
           gap: 5px;
           margin-bottom: 8px;
           padding-bottom: 5px;
           border-bottom: 1px dotted #eee;
+          align-items: center;
         }
-        .history-item:last-child {
+        .history-item:last-child, .favorite-item:last-child {
           border-bottom: none;
         }
-        .history-item .number-ball {
+        .history-item .number-ball, .favorite-item .number-ball {
             width: 30px;
             height: 30px;
             font-size: 0.9em;
+        }
+        .favorite-item button.delete-favorite {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            border-radius: 5px;
+            margin-left: auto;
+            cursor: pointer;
+        }
+        .favorite-item button.delete-favorite:hover {
+            background-color: #c82333;
+        }
+        .favorite-item-set {
+            cursor: pointer;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .favorite-item-set:hover {
+            opacity: 0.8;
         }
       </style>
       <div class="lotto-container">
@@ -135,12 +158,19 @@ class LottoGenerator extends HTMLElement {
         <div class="action-buttons">
           <button id="save-state">Save State</button>
           <button id="load-state">Load State</button>
+          <button id="save-favorite" disabled>Save to Favorites</button>
         </div>
         <div class="history-section">
           <h3>Generated Numbers History</h3>
           <button id="clear-history">Clear History</button>
           <div id="history-container">
             <p>No numbers generated yet.</p>
+          </div>
+        </div>
+        <div class="favorites-section">
+          <h3>My Favorites</h3>
+          <div id="favorites-container">
+            <p>No favorites saved yet.</p>
           </div>
         </div>
       </div>
@@ -154,6 +184,7 @@ class LottoGenerator extends HTMLElement {
     this.shadowRoot.getElementById('clear-history').addEventListener('click', () => this.clearHistory());
     this.shadowRoot.getElementById('save-state').addEventListener('click', () => this.saveState());
     this.shadowRoot.getElementById('load-state').addEventListener('click', () => this.loadState());
+    this.shadowRoot.getElementById('save-favorite').addEventListener('click', () => this.saveFavorite());
 
     this.minNumberInput = this.shadowRoot.getElementById('min-number');
     this.maxNumberInput = this.shadowRoot.getElementById('max-number');
@@ -165,6 +196,7 @@ class LottoGenerator extends HTMLElement {
 
     this.loadState(); // Attempt to load state on initialization
     this.renderHistory();
+    this.renderFavorites();
   }
 
   updateRange() {
@@ -203,6 +235,7 @@ class LottoGenerator extends HTMLElement {
     this.numbers = Array.from(numbers).sort((a, b) => a - b);
     this.renderNumbers(this.numbers);
     this.shadowRoot.getElementById('copy').disabled = false;
+    this.shadowRoot.getElementById('save-favorite').disabled = false;
     this.addNumbersToHistory(this.numbers);
     this.saveState(); // Save state after generating numbers
   }
@@ -242,18 +275,92 @@ class LottoGenerator extends HTMLElement {
     this.saveState(); // Save state after clearing history
   }
 
+  saveFavorite() {
+    if (this.numbers.length === 0) {
+      alert('Generate numbers first before saving to favorites!');
+      return;
+    }
+    const currentNumbersString = this.numbers.join(',');
+    const isDuplicate = this.favorites.some(fav => fav.join(',') === currentNumbersString);
+
+    if (isDuplicate) {
+      alert('This set of numbers is already in your favorites!');
+      return;
+    }
+
+    this.favorites.push([...this.numbers]); // Save a copy
+    this.saveState();
+    this.renderFavorites();
+    alert('Numbers saved to favorites!');
+  }
+
+  loadFavorite(favoriteNumbers) {
+    this.numbers = [...favoriteNumbers];
+    this.renderNumbers(this.numbers);
+    this.shadowRoot.getElementById('copy').disabled = false;
+    this.shadowRoot.getElementById('save-favorite').disabled = false;
+    alert('Favorite numbers loaded!');
+  }
+
+  deleteFavorite(index) {
+    this.favorites.splice(index, 1);
+    this.saveState();
+    this.renderFavorites();
+    alert('Favorite deleted!');
+  }
+
+  renderFavorites() {
+    const favoritesContainer = this.shadowRoot.getElementById('favorites-container');
+    favoritesContainer.innerHTML = '';
+    if (this.favorites.length === 0) {
+      favoritesContainer.innerHTML = '<p>No favorites saved yet.</p>';
+      return;
+    }
+    this.favorites.forEach((favNumbers, index) => {
+      const favoriteItem = document.createElement('div');
+      favoriteItem.className = 'favorite-item';
+      const numberSet = document.createElement('div');
+      numberSet.className = 'favorite-item-set';
+      numberSet.addEventListener('click', () => this.loadFavorite(favNumbers));
+
+      favNumbers.forEach(number => {
+        const ball = document.createElement('div');
+        ball.className = 'number-ball';
+        ball.textContent = number;
+        ball.style.backgroundColor = this.getColor(number);
+        numberSet.appendChild(ball);
+      });
+
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'delete-favorite';
+      deleteButton.textContent = 'X';
+      deleteButton.addEventListener('click', (event) => {
+        event.stopPropagation(); // Prevent loading when deleting
+        this.deleteFavorite(index);
+      });
+
+      favoriteItem.appendChild(numberSet);
+      favoriteItem.appendChild(deleteButton);
+      favoritesContainer.appendChild(favoriteItem);
+    });
+  }
+
   resetAll() {
     this.numbers = [];
+    this.history = [];
+    this.favorites = [];
     this.shadowRoot.querySelector('.numbers-container').innerHTML = '';
     this.shadowRoot.getElementById('copy').disabled = true;
-    this.clearHistory();
+    this.shadowRoot.getElementById('save-favorite').disabled = true;
     this.minNumber = 1;
     this.maxNumber = 45;
     this.numBalls = 6;
     this.minNumberInput.value = this.minNumber;
     this.maxNumberInput.value = this.maxNumber;
     this.numBallsInput.value = this.numBalls;
-    localStorage.removeItem('lottoGeneratorState'); // Clear local storage on reset
+    localStorage.removeItem('lottoGeneratorState'); // Clear all data from local storage
+    this.renderHistory();
+    this.renderFavorites();
     alert('All data reset!');
   }
 
@@ -261,6 +368,7 @@ class LottoGenerator extends HTMLElement {
     const state = {
       numbers: this.numbers,
       history: this.history,
+      favorites: this.favorites,
       minNumber: this.minNumber,
       maxNumber: this.maxNumber,
       numBalls: this.numBalls
@@ -275,6 +383,7 @@ class LottoGenerator extends HTMLElement {
       const state = JSON.parse(savedState);
       this.numbers = state.numbers || [];
       this.history = state.history || [];
+      this.favorites = state.favorites || [];
       this.minNumber = state.minNumber || 1;
       this.maxNumber = state.maxNumber || 45;
       this.numBalls = state.numBalls || 6;
@@ -285,7 +394,9 @@ class LottoGenerator extends HTMLElement {
 
       this.renderNumbers(this.numbers);
       this.renderHistory();
+      this.renderFavorites();
       this.shadowRoot.getElementById('copy').disabled = this.numbers.length === 0;
+      this.shadowRoot.getElementById('save-favorite').disabled = this.numbers.length === 0;
       // alert('State loaded from local storage!');
     } else {
       // alert('No saved state found.');
