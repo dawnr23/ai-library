@@ -6,6 +6,7 @@ class LottoGenerator extends HTMLElement {
     this.history = [];
     this.minNumber = 1;
     this.maxNumber = 45;
+    this.numBalls = 6;
     this.shadowRoot.innerHTML = `
       <style>
         .lotto-container {
@@ -23,6 +24,7 @@ class LottoGenerator extends HTMLElement {
             display: flex;
             gap: 10px;
             align-items: center;
+            margin-bottom: 10px;
         }
         .input-group label {
             font-weight: bold;
@@ -121,6 +123,8 @@ class LottoGenerator extends HTMLElement {
             <input type="number" id="min-number" value="1" min="1" max="99">
             <label for="max-number">Max:</label>
             <input type="number" id="max-number" value="45" min="1" max="99">
+            <label for="num-balls">Balls:</label>
+            <input type="number" id="num-balls" value="6" min="1" max="10">
         </div>
         <div class="buttons-container">
           <button id="generate">Generate Numbers</button>
@@ -153,9 +157,11 @@ class LottoGenerator extends HTMLElement {
 
     this.minNumberInput = this.shadowRoot.getElementById('min-number');
     this.maxNumberInput = this.shadowRoot.getElementById('max-number');
+    this.numBallsInput = this.shadowRoot.getElementById('num-balls');
 
     this.minNumberInput.addEventListener('change', () => this.updateRange());
     this.maxNumberInput.addEventListener('change', () => this.updateRange());
+    this.numBallsInput.addEventListener('change', () => this.updateNumBalls());
 
     this.loadState(); // Attempt to load state on initialization
     this.renderHistory();
@@ -177,9 +183,20 @@ class LottoGenerator extends HTMLElement {
     this.saveState(); // Save updated range
   }
 
+  updateNumBalls() {
+    const newNumBalls = parseInt(this.numBallsInput.value);
+    if (newNumBalls < 1 || newNumBalls > (this.maxNumber - this.minNumber + 1)) {
+        alert('Invalid number of balls: Must be a positive number and not exceed the range size.');
+        this.numBallsInput.value = this.numBalls; // Revert to last valid state
+        return;
+    }
+    this.numBalls = newNumBalls;
+    this.saveState(); // Save updated number of balls
+  }
+
   generateNumbers() {
     const numbers = new Set();
-    while (numbers.size < 6) {
+    while (numbers.size < this.numBalls) {
       const randomNumber = Math.floor(Math.random() * (this.maxNumber - this.minNumber + 1)) + this.minNumber;
       numbers.add(randomNumber);
     }
@@ -232,8 +249,10 @@ class LottoGenerator extends HTMLElement {
     this.clearHistory();
     this.minNumber = 1;
     this.maxNumber = 45;
+    this.numBalls = 6;
     this.minNumberInput.value = this.minNumber;
     this.maxNumberInput.value = this.maxNumber;
+    this.numBallsInput.value = this.numBalls;
     localStorage.removeItem('lottoGeneratorState'); // Clear local storage on reset
     alert('All data reset!');
   }
@@ -243,7 +262,8 @@ class LottoGenerator extends HTMLElement {
       numbers: this.numbers,
       history: this.history,
       minNumber: this.minNumber,
-      maxNumber: this.maxNumber
+      maxNumber: this.maxNumber,
+      numBalls: this.numBalls
     };
     localStorage.setItem('lottoGeneratorState', JSON.stringify(state));
     // alert('State saved to local storage!');
@@ -257,9 +277,11 @@ class LottoGenerator extends HTMLElement {
       this.history = state.history || [];
       this.minNumber = state.minNumber || 1;
       this.maxNumber = state.maxNumber || 45;
+      this.numBalls = state.numBalls || 6;
 
       this.minNumberInput.value = this.minNumber;
       this.maxNumberInput.value = this.maxNumber;
+      this.numBallsInput.value = this.numBalls;
 
       this.renderNumbers(this.numbers);
       this.renderHistory();
