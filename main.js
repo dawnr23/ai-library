@@ -9,8 +9,47 @@ class LottoGenerator extends HTMLElement {
     this.maxNumber = 45;
     this.numBalls = 6;
     this.numSets = 1; // New property for number of sets
+    this.currentTheme = 'default'; // Default theme
     this.shadowRoot.innerHTML = `
       <style>
+        :host {
+            --bg-color: #f0f4f8;
+            --container-bg: #ffffff;
+            --text-color: #333;
+            --primary-btn-bg: #28a745;
+            --primary-btn-hover: #218838;
+            --secondary-btn-bg: #007bff;
+            --secondary-btn-hover: #0069d9;
+            --danger-btn-bg: #dc3545;
+            --danger-btn-hover: #c82333;
+            --info-btn-bg: #6c757d;
+            --info-btn-hover: #5a6268;
+            --warning-btn-bg: #ffc107;
+            --warning-btn-hover: #e0a800;
+            --border-color: #e0e6ed;
+            --input-border: #c8d3db;
+            --history-bg: #f8f9fa;
+        }
+
+        :host(.dark-theme) {
+            --bg-color: #2c3e50;
+            --container-bg: #34495e;
+            --text-color: #ecf0f1;
+            --primary-btn-bg: #27ae60;
+            --primary-btn-hover: #229954;
+            --secondary-btn-bg: #3498db;
+            --secondary-btn-hover: #2980b9;
+            --danger-btn-bg: #e74c3c;
+            --danger-btn-hover: #c0392b;
+            --info-btn-bg: #7f8c8d;
+            --info-btn-hover: #6c757d;
+            --warning-btn-bg: #f39c12;
+            --warning-btn-hover: #e67e22;
+            --border-color: #3f5d79;
+            --input-border: #4d6a84;
+            --history-bg: #2b3b4a;
+        }
+
         .lotto-container {
           display: flex;
           flex-direction: column;
@@ -18,9 +57,10 @@ class LottoGenerator extends HTMLElement {
           gap: 20px;
           padding: 20px;
           border-radius: 10px;
-          background-color: #f0f0f0;
+          background-color: var(--container-bg);
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
           max-width: 600px; /* Limit width to make history more readable */
+          color: var(--text-color);
         }
         .input-group {
             display: flex;
@@ -32,14 +72,17 @@ class LottoGenerator extends HTMLElement {
         }
         .input-group label {
             font-weight: bold;
+            color: var(--text-color);
         }
         .input-group input {
             padding: 8px;
             border-radius: 5px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--input-border);
             width: 60px;
             text-align: center;
             font-size: 1em;
+            background-color: var(--container-bg);
+            color: var(--text-color);
         }
         .buttons-container {
           display: flex;
@@ -57,17 +100,30 @@ class LottoGenerator extends HTMLElement {
           cursor: pointer;
           border: none;
           border-radius: 5px;
-          background-color: #4CAF50;
+          background-color: var(--primary-btn-bg);
           color: white;
           transition: background-color 0.3s;
         }
         button:hover {
-          background-color: #45a049;
+          background-color: var(--primary-btn-hover);
         }
         button:disabled {
           background-color: #ccc;
           cursor: not-allowed;
         }
+
+        #generate { background-color: var(--primary-btn-bg); }
+        #generate:hover { background-color: var(--primary-btn-hover); }
+        #copy { background-color: var(--secondary-btn-bg); }
+        #copy:hover { background-color: var(--secondary-btn-hover); }
+        #reset { background-color: var(--danger-btn-bg); }
+        #reset:hover { background-color: var(--danger-btn-hover); }
+        #save-state, #load-state, #share, #smart-pick { background-color: var(--info-btn-bg); }
+        #save-state:hover, #load-state:hover, #share:hover, #smart-pick:hover { background-color: var(--info-btn-hover); }
+        #clear-history { background-color: var(--warning-btn-bg); color: var(--text-color); }
+        #clear-history:hover { background-color: var(--warning-btn-hover); }
+
+
         .numbers-container {
           display: flex;
           flex-direction: column; /* Changed for multiple sets */
@@ -83,7 +139,7 @@ class LottoGenerator extends HTMLElement {
           padding: 10px;
           border: 1px dashed #ccc;
           border-radius: 8px;
-          background-color: #f9f9f9;
+          background-color: var(--history-bg);
         }
         .number-ball {
           display: flex;
@@ -99,19 +155,19 @@ class LottoGenerator extends HTMLElement {
         .history-section, .favorites-section {
           width: 100%;
           margin-top: 20px;
-          border-top: 1px solid #ddd;
+          border-top: 1px solid var(--border-color);
           padding-top: 20px;
           text-align: center;
         }
         .history-section h3, .favorites-section h3 {
-          color: #555;
+          color: var(--text-color);
           margin-bottom: 15px;
         }
         #history-container, #favorites-container {
           max-height: 200px;
           overflow-y: auto;
-          border: 1px solid #eee;
-          background-color: #fff;
+          border: 1px solid var(--input-border);
+          background-color: var(--history-bg);
           padding: 10px;
           border-radius: 5px;
           text-align: left;
@@ -122,7 +178,7 @@ class LottoGenerator extends HTMLElement {
           gap: 5px;
           margin-bottom: 8px;
           padding-bottom: 5px;
-          border-bottom: 1px dotted #eee;
+          border-bottom: 1px dotted var(--input-border);
           align-items: center;
         }
         .history-item:last-child, .favorite-item:last-child {
@@ -134,7 +190,7 @@ class LottoGenerator extends HTMLElement {
             font-size: 0.9em;
         }
         .favorite-item button.delete-favorite {
-            background-color: #dc3545;
+            background-color: var(--danger-btn-bg);
             color: white;
             padding: 5px 10px;
             font-size: 0.8em;
@@ -143,7 +199,7 @@ class LottoGenerator extends HTMLElement {
             cursor: pointer;
         }
         .favorite-item button.delete-favorite:hover {
-            background-color: #c82333;
+            background-color: var(--danger-btn-hover);
         }
         .favorite-item-set {
             cursor: pointer;
@@ -154,8 +210,32 @@ class LottoGenerator extends HTMLElement {
         .favorite-item-set:hover {
             opacity: 0.8;
         }
+        .theme-selector {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .theme-selector label {
+            font-weight: bold;
+            margin-right: 10px;
+            color: var(--text-color);
+        }
+        .theme-selector select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid var(--input-border);
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            font-size: 1em;
+        }
       </style>
       <div class="lotto-container">
+        <div class="theme-selector">
+            <label for="theme-select">Theme:</label>
+            <select id="theme-select">
+                <option value="default">Default</option>
+                <option value="dark-theme">Dark</option>
+            </select>
+        </div>
         <div class="input-group">
             <label for="min-number">Min:</label>
             <input type="number" id="min-number" value="1" min="1" max="99">
@@ -202,7 +282,7 @@ class LottoGenerator extends HTMLElement {
     this.shadowRoot.getElementById('reset').addEventListener('click', () => this.resetAll());
     this.shadowRoot.getElementById('clear-history').addEventListener('click', () => this.clearHistory());
     this.shadowRoot.getElementById('save-state').addEventListener('click', () => this.saveState());
-    this.shadowRoot.getElementById('load-state').addEventListener('click', () => this.loadState());
+    this.shadowRoot.getElementById('load-state').addEventListener(() => this.loadState());
     this.shadowRoot.getElementById('save-favorite').addEventListener('click', () => this.saveFavorite());
     this.shadowRoot.getElementById('share').addEventListener('click', () => this.shareNumbers());
     this.shadowRoot.getElementById('smart-pick').addEventListener('click', () => this.generateSmartPick());
@@ -212,16 +292,29 @@ class LottoGenerator extends HTMLElement {
     this.maxNumberInput = this.shadowRoot.getElementById('max-number');
     this.numBallsInput = this.shadowRoot.getElementById('num-balls');
     this.numSetsInput = this.shadowRoot.getElementById('num-sets');
+    this.themeSelect = this.shadowRoot.getElementById('theme-select');
 
     this.minNumberInput.addEventListener('change', () => this.updateRange());
     this.maxNumberInput.addEventListener('change', () => this.updateRange());
     this.numBallsInput.addEventListener('change', () => this.updateNumBalls());
     this.numSetsInput.addEventListener('change', () => this.updateNumSets());
+    this.themeSelect.addEventListener('change', () => this.setTheme(this.themeSelect.value));
 
 
     this.loadState(); // Attempt to load state on initialization
     this.renderHistory();
     this.renderFavorites();
+  }
+
+  setTheme(theme) {
+    this.currentTheme = theme;
+    // Apply theme to the host element
+    if (theme === 'dark-theme') {
+      this.host.classList.add('dark-theme');
+    } else {
+      this.host.classList.remove('dark-theme');
+    }
+    this.saveState(); // Persist theme selection
   }
 
   updateRange() {
@@ -499,7 +592,8 @@ class LottoGenerator extends HTMLElement {
       minNumber: this.minNumber,
       maxNumber: this.maxNumber,
       numBalls: this.numBalls,
-      numSets: this.numSets
+      numSets: this.numSets,
+      currentTheme: this.currentTheme
     };
     localStorage.setItem('lottoGeneratorState', JSON.stringify(state));
     // alert('State saved to local storage!');
@@ -516,11 +610,14 @@ class LottoGenerator extends HTMLElement {
       this.maxNumber = state.maxNumber || 45;
       this.numBalls = state.numBalls || 6;
       this.numSets = state.numSets || 1;
+      this.currentTheme = state.currentTheme || 'default';
 
       this.minNumberInput.value = this.minNumber;
       this.maxNumberInput.value = this.maxNumber;
       this.numBallsInput.value = this.numBalls;
       this.numSetsInput.value = this.numSets;
+      this.themeSelect.value = this.currentTheme; // Set the theme selector
+      this.setTheme(this.currentTheme); // Apply the loaded theme
 
       this.renderNumbers(this.numbers);
       this.renderHistory();
