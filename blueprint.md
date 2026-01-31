@@ -18,6 +18,7 @@ This document outlines the features and implementation details of the AI Library
     *   Enables sharing of generated numbers via URL or social media.
     *   Generates multiple sets of lotto numbers at once.
     *   Suggests numbers based on predefined "Smart Pick" criteria (e.g., common numbers, overdue numbers).
+    *   Provides theme selection for visual customization.
 *   **Implementation:**
     *   A custom Web Component `lotto-generator` will encapsulate the logic and UI.
     *   A button will trigger the number generation.
@@ -72,3 +73,7 @@ This document outlines the features and implementation details of the AI Library
 13. **[Completed]** Implement 'Smart Pick' feature.
     *   **[Completed]** Add a 'Smart Pick' button.
     *   **[Completed]** Implement logic to generate numbers based on simple "smart" criteria (e.g., most/least frequent, overdue).
+14. **[In Progress]** Implement 'Theme Selection' feature.
+    *   Add a theme selector (e.g., dropdown, buttons) to allow users to switch themes.
+    *   Define different CSS variables or classes for various themes.
+    *   Persist the selected theme in local storage.
